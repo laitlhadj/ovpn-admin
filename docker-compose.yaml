@@ -27,7 +27,7 @@ services:
     environment:
       OVPN_DEBUG: "true"
       OVPN_VERBOSE: "true"
-      OVPN_NETWORK: "192.168.100.0/24"
+      OVPN_NETWORK: "10.8.0.0/24"
       OVPN_CCD: "true"
       OVPN_CCD_PATH: "/mnt/ccd"
       EASYRSA_PATH: "/mnt/easyrsa"
@@ -43,7 +43,7 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./nginx/htpasswd:/etc/nginx/.htpasswd
     ports:
       - 80:80
