@@ -8,7 +8,7 @@ services:
     image: openvpn:local
     command: /etc/openvpn/setup/configure.sh
     environment:
-      OVPN_SERVER_NET: "192.168.100.0"
+      OVPN_SERVER_NET: "10.8.0.0"
       OVPN_SERVER_MASK: "255.255.255.0"
       OVPN_PASSWD_AUTH: "true"
     cap_add:
@@ -31,7 +31,7 @@ services:
       OVPN_CCD: "true"
       OVPN_CCD_PATH: "/mnt/ccd"
       EASYRSA_PATH: "/mnt/easyrsa"
-      OVPN_SERVER: "127.0.0.1:7777:tcp"
+      OVPN_SERVER: "ovpn2.sportigo.fr:7777:tcp"
       OVPN_INDEX_PATH: "/mnt/easyrsa/pki/index.txt"
       OVPN_AUTH: "true"
       OVPN_AUTH_DB_PATH: "/mnt/easyrsa/pki/users.db"
@@ -40,3 +40,11 @@ services:
     volumes:
       - ./easyrsa_master:/mnt/easyrsa
       - ./ccd_master:/mnt/ccd
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/htpasswd:/etc/nginx/.htpasswd
+    ports:
+      - 80:80
+      - 443:443
