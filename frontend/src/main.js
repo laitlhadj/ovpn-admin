@@ -52,6 +52,11 @@ new Vue({
         // filterable: true,
       },
       {
+        label: 'Address',
+        field: 'Address',
+        // filterable: true,
+      },
+      {
         label: 'Account Status',
         field: 'AccountStatus',
         filterable: true,
