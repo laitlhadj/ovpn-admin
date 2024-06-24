@@ -979,7 +979,7 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
         }
     }
 
-
+    staticIP, err := findNextFreeIP()
     if err != nil {
         log.Debugf("userCreate: findNextFreeIP(): %s", err.Error())
         return false, err.Error()
@@ -1008,7 +1008,7 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
         }
     }
 
-	staticIP, err := findNextFreeIP()
+
 
     // Ajouter l'IP statique au fichier CCD
     ccdPath := fmt.Sprintf("/mnt/ccd/%s", username)
