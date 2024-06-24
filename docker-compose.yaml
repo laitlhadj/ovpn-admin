@@ -24,7 +24,7 @@ services:
     build:
       context: .
     image: ovpn-admin:local
-    command: /app/ovpn-admin --ccd.path="/mnt/ccd"
+    command: /app/ovpn-admin --ccd.path="/mnt/ccd" --ovpn.network="10.8.0.0/24"
     restart: always
     environment:
       OVPN_DEBUG: "true"
