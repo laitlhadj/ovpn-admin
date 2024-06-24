@@ -19,6 +19,8 @@ remote-cert-tls server
 # if you use systemd-resolved first install openvpn-systemd-resolved package
 #up /etc/openvpn/update-systemd-resolved
 #down /etc/openvpn/update-systemd-resolved
+ifconfig-pool-persist /etc/openvpn/ccd/ipp.txt
+client-config-dir /etc/openvpn/ccd
 
 {{- if .PasswdAuth }}
 auth-user-pass

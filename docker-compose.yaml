@@ -24,7 +24,7 @@ services:
     build:
       context: .
     image: ovpn-admin:local
-    command: /app/ovpn-admin --ccd.path="/mnt/ccd" --ovpn.network="10.8.0.0/24"
+    command: /app/ovpn-admin
     restart: always
     environment:
       OVPN_DEBUG: "true"
@@ -33,7 +33,7 @@ services:
       OVPN_CCD: "true"
       OVPN_CCD_PATH: "/mnt/ccd"
       EASYRSA_PATH: "/mnt/easyrsa"
-      OVPN_SERVER: "ovpn2.sportigo.fr:7777:tcp"
+      OVPN_SERVER: "10.8.0.0:7777:tcp"
       OVPN_INDEX_PATH: "/mnt/easyrsa/pki/index.txt"
       OVPN_AUTH: "true"
       OVPN_AUTH_DB_PATH: "/mnt/easyrsa/pki/users.db"
