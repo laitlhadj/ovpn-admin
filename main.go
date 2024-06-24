@@ -1045,6 +1045,7 @@ func findNextFreeIP() (string, error) {
     return strings.TrimSpace(ip), nil
 }
 
+
 func (oAdmin *OvpnAdmin) userChangePassword(username, password string) (error, string) {
 
 	if checkUserExist(username) {

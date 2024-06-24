@@ -32,14 +32,14 @@ func parseDateToUnix(layout, datetime string) int64 {
 	return parseDate(layout, datetime).Unix()
 }
 
-func runBash(script string) string {
-	log.Debugln(script)
-	cmd := exec.Command("bash", "-c", script)
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Sprint(err) + " : " + string(stdout)
-	}
-	return string(stdout)
+func runBash(script string) (string, error) {
+    log.Debugln(script)
+    cmd := exec.Command("bash", "-c", script)
+    stdout, err := cmd.CombinedOutput()
+    if err != nil {
+        return "", fmt.Errorf("%s : %s", err, string(stdout))
+    }
+    return string(stdout), nil
 }
 
 func fExist(path string) bool {
