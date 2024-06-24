@@ -956,108 +956,50 @@ func (oAdmin *OvpnAdmin) usersList() []OpenvpnClient {
 }
 
 func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
-    ucErr := fmt.Sprintf("User \"%s\" created", username)
+	ucErr := fmt.Sprintf("User \"%s\" created", username)
 
-    oAdmin.createUserMutex.Lock()
-    defer oAdmin.createUserMutex.Unlock()
+	oAdmin.createUserMutex.Lock()
+	defer oAdmin.createUserMutex.Unlock()
 
-    if checkUserExist(username) {
-        ucErr = fmt.Sprintf("User \"%s\" already exists\n", username)
-        log.Debugf("userCreate: checkUserExist():  %s", ucErr)
-        return false, ucErr
-    }
+	if checkUserExist(username) {
+		ucErr = fmt.Sprintf("User \"%s\" already exists\n", username)
+		log.Debugf("userCreate: checkUserExist():  %s", ucErr)
+		return false, ucErr
+	}
 
-    if err := validateUsername(username); err != nil {
-        log.Debugf("userCreate: validateUsername(): %s", err.Error())
-        return false, err.Error()
-    }
+	if err := validateUsername(username); err != nil {
+		log.Debugf("userCreate: validateUsername(): %s", err.Error())
+		return false, err.Error()
+	}
 
-    if *authByPassword {
-        if err := validatePassword(password); err != nil {
-            log.Debugf("userCreate: authByPassword(): %s", err.Error())
-            return false, err.Error()
-        }
-    }
+	if *authByPassword {
+		if err := validatePassword(password); err != nil {
+			log.Debugf("userCreate: authByPassword(): %s", err.Error())
+			return false, err.Error()
+		}
+	}
 
-    staticIP, err := findNextFreeIP()
-    if err != nil {
-        log.Debugf("userCreate: findNextFreeIP(): %s", err.Error())
-        return false, err.Error()
-    }
+	if *storageBackend == "kubernetes.secrets" {
+		err := app.easyrsaBuildClient(username)
+		if err != nil {
+			log.Error(err)
+		}
+	} else {
+		o := runBash(fmt.Sprintf("cd %s && %s build-client-full %s nopass 1>/dev/null", *easyrsaDirPath, *easyrsaBinPath, username))
+		log.Debug(o)
+	}
 
-    if *storageBackend == "kubernetes.secrets" {
-        err := app.easyrsaBuildClient(username)
-        if err != nil {
-            log.Error(err)
-        }
-    } else {
-        o := runBash(fmt.Sprintf("cd %s && %s build-client-full %s nopass 1>/dev/null", *easyrsaDirPath, *easyrsaBinPath, username))
-        log.Debug(o)
-        if strings.Contains(o, "error") {
-            log.Debugf("userCreate: build-client-full: %s", o)
-            return false, o
-        }
-    }
+	if *authByPassword {
+		o := runBash(fmt.Sprintf("openvpn-user create --db.path %s --user %s --password %s", *authDatabase, username, password))
+		log.Debug(o)
+	}
 
-    if *authByPassword {
-        o := runBash(fmt.Sprintf("openvpn-user create --db.path %s --user %s --password %s", *authDatabase, username, password))
-        log.Debug(o)
-        if strings.Contains(o, "error") {
-            log.Debugf("userCreate: openvpn-user create: %s", o)
-            return false, o
-        }
-    }
+	log.Infof("Certificate for user %s issued", username)
 
+	//oAdmin.clients = oAdmin.usersList()
 
-
-    // Ajouter l'IP statique au fichier CCD
-    ccdPath := fmt.Sprintf("/mnt/ccd/%s", username)
-    ipConfig := fmt.Sprintf("ifconfig-push %s 255.255.255.0", staticIP)
-    o := runBash(fmt.Sprintf("echo '%s' > %s", ipConfig, ccdPath))
-    if strings.Contains(o, "error") {
-        log.Debugf("userCreate: write CCD file: %s", o)
-        return false, o
-    }
-    log.Debug(o)
-
-    log.Infof("Certificate for user %s issued with static IP %s", username, staticIP)
-
-    // oAdmin.clients = oAdmin.usersList()
-
-    return true, ucErr
+	return true, ucErr
 }
-
-
-func findNextFreeIP() (string, error) {
-    // Vérifier si le répertoire est vide
-    cmdCheckEmpty := "ls -A /mnt/ccd | wc -l"
-    output := runBash(cmdCheckEmpty)
-    if strings.Contains(output, "error") {
-        return "", fmt.Errorf("could not check directory: %s", output)
-    }
-
-    if strings.TrimSpace(output) == "0" {
-        // Si le répertoire est vide, retourner 10.8.0.2
-        return "10.8.0.2", nil
-    }
-
-    // Trouver la prochaine IP libre
-    cmd := `
-    for i in {2..255}; do
-        ip="10.8.0.$i"
-        if ! grep -qr "$ip" /mnt/ccd/; then
-            echo $ip
-            break
-        fi
-    done
-    `
-    ip := runBash(cmd)
-    if strings.Contains(ip, "error") {
-        return "", fmt.Errorf("could not find a free IP: %s", ip)
-    }
-    return strings.TrimSpace(ip), nil
-}
-
 
 func (oAdmin *OvpnAdmin) userChangePassword(username, password string) (error, string) {
 
