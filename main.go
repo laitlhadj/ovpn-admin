@@ -979,7 +979,7 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
         }
     }
 
-    staticIP, err := findNextFreeIP()
+
     if err != nil {
         log.Debugf("userCreate: findNextFreeIP(): %s", err.Error())
         return false, err.Error()
@@ -1008,8 +1008,10 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
         }
     }
 
+	staticIP, err := findNextFreeIP()
+
     // Ajouter l'IP statique au fichier CCD
-    ccdPath := fmt.Sprintf("/etc/openvpn/ccd/%s", username)
+    ccdPath := fmt.Sprintf("/mnt/ccd/%s", username)
     ipConfig := fmt.Sprintf("ifconfig-push %s 255.255.255.0", staticIP)
     o := runBash(fmt.Sprintf("echo '%s' > %s", ipConfig, ccdPath))
     if strings.Contains(o, "error") {
@@ -1028,7 +1030,7 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
 
 func findNextFreeIP() (string, error) {
     // Vérifier si le répertoire est vide
-    cmdCheckEmpty := "ls -A /etc/openvpn/ccd | wc -l"
+    cmdCheckEmpty := "ls -A /mnt/ccd | wc -l"
     output := runBash(cmdCheckEmpty)
     if strings.Contains(output, "error") {
         return "", fmt.Errorf("could not check directory: %s", output)
@@ -1043,7 +1045,7 @@ func findNextFreeIP() (string, error) {
     cmd := `
     for i in {2..255}; do
         ip="10.8.0.$i"
-        if ! grep -qr "$ip" /etc/openvpn/ccd/; then
+        if ! grep -qr "$ip" /mnt/ccd/; then
             echo $ip
             break
         fi
