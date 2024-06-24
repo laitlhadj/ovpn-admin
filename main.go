@@ -993,20 +993,30 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
     } else {
         o := runBash(fmt.Sprintf("cd %s && %s build-client-full %s nopass 1>/dev/null", *easyrsaDirPath, *easyrsaBinPath, username))
         log.Debug(o)
+        if strings.Contains(o, "error") {
+            log.Debugf("userCreate: build-client-full: %s", o)
+            return false, o
+        }
     }
 
     if *authByPassword {
         o := runBash(fmt.Sprintf("openvpn-user create --db.path %s --user %s --password %s", *authDatabase, username, password))
         log.Debug(o)
+        if strings.Contains(o, "error") {
+            log.Debugf("userCreate: openvpn-user create: %s", o)
+            return false, o
+        }
     }
 
     // Ajouter l'IP statique au fichier CCD
     ccdPath := fmt.Sprintf("/etc/openvpn/ccd/%s", username)
     ipConfig := fmt.Sprintf("ifconfig-push %s 255.255.255.0", staticIP)
     o := runBash(fmt.Sprintf("echo '%s' > %s", ipConfig, ccdPath))
-    if o != "" {
-        log.Debug(o)
+    if strings.Contains(o, "error") {
+        log.Debugf("userCreate: write CCD file: %s", o)
+        return false, o
     }
+    log.Debug(o)
 
     log.Infof("Certificate for user %s issued with static IP %s", username, staticIP)
 
@@ -1015,12 +1025,13 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
     return true, ucErr
 }
 
+
 func findNextFreeIP() (string, error) {
     // Vérifier si le répertoire est vide
     cmdCheckEmpty := "ls -A /etc/openvpn/ccd | wc -l"
-    output, err := runBash(cmdCheckEmpty)
-    if err != nil {
-        return "", fmt.Errorf("could not check directory: %v", err)
+    output := runBash(cmdCheckEmpty)
+    if strings.Contains(output, "error") {
+        return "", fmt.Errorf("could not check directory: %s", output)
     }
 
     if strings.TrimSpace(output) == "0" {
@@ -1038,9 +1049,9 @@ func findNextFreeIP() (string, error) {
         fi
     done
     `
-    ip, err := runBash(cmd)
-    if err != nil {
-        return "", fmt.Errorf("could not find a free IP: %v", err)
+    ip := runBash(cmd)
+    if strings.Contains(ip, "error") {
+        return "", fmt.Errorf("could not find a free IP: %s", ip)
     }
     return strings.TrimSpace(ip), nil
 }
