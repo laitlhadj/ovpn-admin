@@ -1016,6 +1016,19 @@ func (oAdmin *OvpnAdmin) userCreate(username, password string) (bool, string) {
 }
 
 func findNextFreeIP() (string, error) {
+    // Vérifier si le répertoire est vide
+    cmdCheckEmpty := "ls -A /etc/openvpn/ccd | wc -l"
+    output, err := runBash(cmdCheckEmpty)
+    if err != nil {
+        return "", fmt.Errorf("could not check directory: %v", err)
+    }
+
+    if strings.TrimSpace(output) == "0" {
+        // Si le répertoire est vide, retourner 10.8.0.2
+        return "10.8.0.2", nil
+    }
+
+    // Trouver la prochaine IP libre
     cmd := `
     for i in {2..255}; do
         ip="10.8.0.$i"
